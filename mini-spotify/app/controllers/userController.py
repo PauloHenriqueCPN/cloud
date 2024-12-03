@@ -2,9 +2,7 @@ from flask_restful import Resource, reqparse
 
 class UserController(Resource):
     def __init__(self, cosmos_client):
-        # Primeiro, obtenha o banco de dados
-        database = cosmos_client.get_database_client("spotify")  # Substitua "spotify" pelo nome do seu banco
-        # Agora, obtenha o container "user"
+        database = cosmos_client.get_database_client("spotify")
         self.container = database.get_container_client("user")
 
     def post(self):

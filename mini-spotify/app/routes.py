@@ -6,12 +6,10 @@ from app.controllers.musicController import MusicController
 from app.config import cosmos_client, COSMOS_DB_NAME
 from azure.cosmos import PartitionKey
 
-# Configuração do banco de dados e containers
 def setup_containers():
     print("Setting up database and containers...")
     database = cosmos_client.create_database_if_not_exists(COSMOS_DB_NAME)
-    
-    # Criar ou verificar os containers
+
     database.create_container_if_not_exists(id="user", partition_key=PartitionKey(path="/id"))
     database.create_container_if_not_exists(id="playlist", partition_key=PartitionKey(path="/user_id"))
     database.create_container_if_not_exists(id="music", partition_key=PartitionKey(path="/playlist_id"))

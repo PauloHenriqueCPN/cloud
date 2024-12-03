@@ -12,17 +12,25 @@ class MusicController(Resource):
         parser.add_argument("playlist_id", required=True, help="ID da playlist necessário")
         data = parser.parse_args()
 
+        query = f"SELECT * FROM c WHERE c.title = '{data['title']}' AND c.artist = '{data['artist']}' AND c.playlist_id = '{data['playlist_id']}'"
+        existing_music = list(self.container.query_items(query=query, enable_cross_partition_query=True))
+        
+        if existing_music:
+            return {"mensagem": "A música já existe nesta playlist"}, 400
+
+        music = {
+            "id": f"{data['playlist_id']}_{data['title']}",
+            "title": data["title"],
+            "artist": data["artist"],
+            "playlist_id": data["playlist_id"]
+        }
+
         try:
-            music = Music(
-                id=f"{data['playlist_id']}_{data['title']}",
-                title=data["title"],
-                artist=data["artist"],
-                playlist_id=data["playlist_id"]
-            )
-            self.container.upsert_item(music.to_dict())
-            return {"mensagem": "Música adicionada com sucesso", "music": music.to_dict()}, 201
+            self.container.upsert_item(music)
+            return {"mensagem": "Música adicionada com sucesso", "music": music}, 201
         except Exception as e:
             return {"mensagem": f"Erro ao adicionar música: {str(e)}"}, 500
+
 
     def get(self, playlist_id):
         try:

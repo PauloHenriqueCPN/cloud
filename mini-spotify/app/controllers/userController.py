@@ -11,12 +11,24 @@ class UserController(Resource):
         parser.add_argument("email", required=True, help="Email necessário")
         data = parser.parse_args()
 
+        query = f"SELECT * FROM c WHERE c.email = '{data['email']}'"
+        existing_users = list(self.container.query_items(query=query, enable_cross_partition_query=True))
+        
+        if existing_users:
+            return {"mensagem": "E-mail já cadastrado"}, 400
+
+        user = {
+            "id": data["email"],  # Use o e-mail como ID
+            "username": data["username"],
+            "email": data["email"]
+        }
+
         try:
-            user = User(id=data["email"], username=data["username"], email=data["email"])
-            self.container.upsert_item(user.to_dict())
-            return {"mensagem": "Usuário criado com sucesso", "usuário": user.to_dict()}, 201
+            self.container.upsert_item(user)
+            return {"mensagem": "Usuário criado com sucesso", "usuário": user}, 201
         except Exception as e:
             return {"mensagem": f"Erro ao criar usuário: {str(e)}"}, 500
+
 
     def get(self, user_id):
         try:

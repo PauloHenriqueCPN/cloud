@@ -11,12 +11,34 @@ class PlaylistController(Resource):
         parser.add_argument("user_id", required=True, help="ID do usuário necessário")
         data = parser.parse_args()
 
+        user_query = f"SELECT * FROM c WHERE c.id = '{data['user_id']}'"
+        user_exists = list(self.container.get_database_client("spotify").get_container_client("user").query_items(
+            query=user_query, enable_cross_partition_query=True
+        ))
+        
+        if not user_exists:
+            return {"mensagem": "Usuário não encontrado"}, 400
+
+        playlist_query = f"SELECT * FROM c WHERE c.user_id = '{data['user_id']}' AND c.name = '{data['name']}'"
+        existing_playlist = list(self.container.query_items(
+            query=playlist_query, enable_cross_partition_query=True
+        ))
+        
+        if existing_playlist:
+            return {"mensagem": "O usuário já possui uma playlist com esse nome"}, 400
+
+        playlist = {
+            "id": f"{data['user_id']}_{data['name']}",  # ID único baseado no user_id e no nome da playlist
+            "name": data["name"],
+            "user_id": data["user_id"]
+        }
+
         try:
-            playlist = Playlist(id=f"{data['user_id']}_{data['name']}", name=data["name"], user_id=data["user_id"])
-            self.container.upsert_item(playlist.to_dict())
-            return {"mensagem": "Playlist criada com sucesso", "playlist": playlist.to_dict()}, 201
+            self.container.upsert_item(playlist)
+            return {"mensagem": "Playlist criada com sucesso", "playlist": playlist}, 201
         except Exception as e:
             return {"mensagem": f"Erro ao criar playlist: {str(e)}"}, 500
+
 
     def get(self, user_id):
         try:

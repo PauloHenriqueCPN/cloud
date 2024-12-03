@@ -1,4 +1,5 @@
 from flask_restful import Resource, reqparse
+from app.models.music import Music
 
 class MusicController(Resource):
     def __init__(self, cosmos_client):
@@ -11,22 +12,25 @@ class MusicController(Resource):
         parser.add_argument("playlist_id", required=True, help="ID da playlist necessário")
         data = parser.parse_args()
 
-        music = {
-            "id": f"{data['playlist_id']}_{data['title']}",
-            "title": data["title"],
-            "artist": data["artist"],
-            "playlist_id": data["playlist_id"]
-        }
-
-        self.container.upsert_item(music)
-        return {"mensagem": "Música adicionada com sucesso", "music": music}, 201
+        try:
+            music = Music(
+                id=f"{data['playlist_id']}_{data['title']}",
+                title=data["title"],
+                artist=data["artist"],
+                playlist_id=data["playlist_id"]
+            )
+            self.container.upsert_item(music.to_dict())
+            return {"mensagem": "Música adicionada com sucesso", "music": music.to_dict()}, 201
+        except Exception as e:
+            return {"mensagem": f"Erro ao adicionar música: {str(e)}"}, 500
 
     def get(self, playlist_id):
         try:
             query = f"SELECT * FROM c WHERE c.playlist_id = '{playlist_id}'"
-            music = list(self.container.query_items(query=query, enable_cross_partition_query=True))
-            if not music:
+            music_data = list(self.container.query_items(query=query, enable_cross_partition_query=True))
+            if not music_data:
                 return {"mensagem": "Nenhuma música encontrada nesta playlist"}, 404
-            return {"músicas": music}, 200
-        except Exception:
-            return {"mensagem": "Erro ao adicionar música"}, 500
+            music_list = [Music.from_dict(data).to_dict() for data in music_data]
+            return {"músicas": music_list}, 200
+        except Exception as e:
+            return {"mensagem": f"Erro ao buscar músicas: {str(e)}"}, 500

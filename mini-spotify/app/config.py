@@ -2,7 +2,7 @@
 from azure.cosmos import CosmosClient
 
 COSMOS_ENDPOINT = "https://as-python.documents.azure.com:443/"  # URL do CosmosDB
-COSMOS_KEY = "yJwnjXnzTCzSt6gVmIT8OhP3o3KsT7XfCbyunCuptsCgJadohhcwUVQ6zUDRnn2gw2jIQGfVGztWACDbs12gQg=="           # Chave do CosmosDB
+COSMOS_KEY = "yJwnjXnzTCzSt6gVmIT8OhP3o3KsT7XfCbyunCuptsCgJadohhcwUVQ6zUDRnn2gw2jIQGfVGztWACDbs12gQg=="  # Chave do CosmosDB
 COSMOS_DB_NAME = "spotify"
 
 cosmos_client = CosmosClient(COSMOS_ENDPOINT, COSMOS_KEY)
